@@ -7,6 +7,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { InsightsPanel } from "./InsightsPanel";
 import { KpiGrid } from "./KpiGrid";
+import { formatKpi } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 function ComparisonTable({
   title,
@@ -175,24 +177,137 @@ export function TemporalView({ data }: { data: ExecutiveAnalytics }) {
   );
 }
 
+const MEDIA_CHANNEL_STYLES: Record<
+  string,
+  { accent: string; border: string }
+> = {
+  instagram: { accent: "text-pink-500", border: "border-pink-500/40" },
+  tiktok: { accent: "text-cyan-400", border: "border-cyan-400/40" },
+  meta: { accent: "text-blue-500", border: "border-blue-500/40" },
+  google: { accent: "text-amber-500", border: "border-amber-500/40" },
+};
+
 export function MediaView({ data }: { data: ExecutiveAnalytics }) {
+  const channels = data.mediaChannels ?? [];
+  const totalInvest = channels.reduce((a, c) => a + c.investment, 0);
+  const totalPosts = channels.reduce((a, c) => a + c.publications, 0);
+
+  const investChart = channels.map((c) => ({
+    label: c.label,
+    value: c.investment,
+  }));
+  const postsChart = channels.map((c) => ({
+    label: c.label,
+    value: c.publications,
+  }));
+
   return (
     <div className="space-y-6">
-      <KpiGrid kpis={data.kpis.filter((k) =>
-        ["investimento", "impressoes", "alcance", "sessoes", "cliques"].includes(k.key)
-      )} />
+      <p className="text-sm text-muted-foreground">
+        Investimento e volume de publicações por canal (Instagram, TikTok, Meta e
+        Google), consolidados das abas Analytics, Fornecedores e Redes Sociais.
+      </p>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {channels.map((ch) => {
+          const style = MEDIA_CHANNEL_STYLES[ch.id] ?? {
+            accent: "text-foreground",
+            border: "border-border",
+          };
+          const investShare =
+            totalInvest > 0 ? (ch.investment / totalInvest) * 100 : 0;
+          const postShare =
+            totalPosts > 0 ? (ch.publications / totalPosts) * 100 : 0;
+          return (
+            <Card key={ch.id} className={cn("border-2", style.border)}>
+              <CardHeader className="pb-2">
+                <CardTitle className={cn("text-base font-semibold", style.accent)}>
+                  {ch.label}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Investimento</p>
+                  <p className="font-display text-xl font-bold">
+                    {formatKpi(ch.investment, "currency")}
+                  </p>
+                  {totalInvest > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {investShare.toFixed(0)}% do total em mídia
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Publicações</p>
+                  <p className="font-display text-xl font-bold">
+                    {formatKpi(ch.publications, "number")}
+                  </p>
+                  {totalPosts > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      {postShare.toFixed(0)}% do total
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <CategoryBarChart
-          data={data.mediaPlatforms.length ? data.mediaPlatforms : data.byCategory}
-          title="Mídia por plataforma"
+          data={investChart}
+          title="Investimento por canal"
         />
-        <RankingList
-          title="Benchmark entre canais (%)"
-          data={data.benchmarking.channelShare}
-          suffix="%"
+        <CategoryBarChart
+          data={postsChart}
+          title="Quantidade de publicações por canal"
         />
       </div>
-      <TimeSeriesChart data={data.timeSeries} title="Histórico de investimento em mídia" />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Resumo por canal</CardTitle>
+        </CardHeader>
+        <CardContent className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border text-left text-muted-foreground">
+                <th className="pb-2 pr-4 font-medium">Canal</th>
+                <th className="pb-2 pr-4 font-medium text-right">Investimento</th>
+                <th className="pb-2 font-medium text-right">Publicações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {channels.map((ch) => (
+                <tr key={ch.id} className="border-b border-border/60">
+                  <td className="py-2.5 pr-4 font-medium">{ch.label}</td>
+                  <td className="py-2.5 pr-4 text-right tabular-nums">
+                    {formatKpi(ch.investment, "currency")}
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums">
+                    {formatKpi(ch.publications, "number")}
+                  </td>
+                </tr>
+              ))}
+              <tr className="font-semibold">
+                <td className="pt-3 pr-4">Total</td>
+                <td className="pt-3 pr-4 text-right tabular-nums">
+                  {formatKpi(totalInvest, "currency")}
+                </td>
+                <td className="pt-3 text-right tabular-nums">
+                  {formatKpi(totalPosts, "number")}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      <TimeSeriesChart
+        data={data.timeSeries}
+        title="Evolução do investimento em mídia"
+      />
     </div>
   );
 }

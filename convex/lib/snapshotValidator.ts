@@ -73,6 +73,21 @@ export const dashboardSnapshotValidator = v.object({
     })
   ),
   mediaPlatforms: v.optional(v.array(chartPoint)),
+  mediaChannels: v.optional(
+    v.array(
+      v.object({
+        id: v.union(
+          v.literal("instagram"),
+          v.literal("tiktok"),
+          v.literal("meta"),
+          v.literal("google")
+        ),
+        label: v.string(),
+        investment: v.number(),
+        publications: v.number(),
+      })
+    )
+  ),
   socialPlatforms: v.optional(v.array(chartPoint)),
   creators: v.optional(v.array(chartPoint)),
 });

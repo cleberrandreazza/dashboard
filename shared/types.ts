@@ -74,4 +74,9 @@ export interface DashboardSnapshot {
   insights: InsightItem[];
 }
 
-export type { ExecutiveAnalytics, CompareGranularity, PeriodComparison } from "./multiplan/historicalAnalytics";
+export type {
+  ExecutiveAnalytics,
+  CompareGranularity,
+  PeriodComparison,
+} from "./multiplan/historicalAnalytics";
+export type { MediaChannelStat, MediaChannelId } from "./multiplan/mediaChannels";

@@ -6,6 +6,10 @@ import type {
 } from "../types";
 import type { MultiplanRecord } from "./types";
 import { METRIC_PATTERNS } from "./metricCatalog";
+import {
+  buildMediaChannelStats,
+  type MediaChannelStat,
+} from "./mediaChannels";
 
 export type CompareGranularity = "month" | "quarter" | "year";
 
@@ -34,6 +38,8 @@ export interface ExecutiveAnalytics extends DashboardSnapshot {
     channelShare: ChartSeriesPoint[];
   };
   mediaPlatforms: ChartSeriesPoint[];
+  /** Instagram, TikTok, Meta e Google — investimento e publicações */
+  mediaChannels: MediaChannelStat[];
   socialPlatforms: ChartSeriesPoint[];
   creators: ChartSeriesPoint[];
 }
@@ -436,9 +442,10 @@ export function buildExecutiveAnalytics(
   const mediaRecords = filtered.filter((r) =>
     mediaDomains.includes(r.domain as (typeof mediaDomains)[number])
   );
+  const mediaChannels = buildMediaChannelStats(mediaRecords);
   const mediaPlatforms = sumByDimension(
     mediaRecords,
-    /investimento|impress|alcance/i,
+    /investimento/i,
     (r) => r.platform ?? r.sheet_name
   );
 
@@ -489,6 +496,7 @@ export function buildExecutiveAnalytics(
       channelShare,
     },
     mediaPlatforms: mediaPlatforms.slice(0, 12),
+    mediaChannels,
     socialPlatforms: socialPlatforms.slice(0, 8),
     creators,
   };
