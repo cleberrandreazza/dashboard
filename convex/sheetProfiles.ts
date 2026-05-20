@@ -1,6 +1,7 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
+import { ensureDefaultMultiplanProfile } from "./lib/sheetProfileSeed";
 
 const profileConfigValidator = v.object({
   shoppingFromFileRegex: v.string(),
@@ -143,39 +144,13 @@ export const seedMultiplanDefault = mutation({
   args: {},
   handler: async (ctx) => {
     const { userId } = await requireAuth(ctx);
-    const existing = await ctx.db
-      .query("sheet_profiles")
-      .withIndex("by_profile_id", (q) =>
-        q.eq("userId", userId).eq("profileId", "multiplan_regional_sul")
-      )
-      .first();
-    if (existing) return existing._id;
+    return await ensureDefaultMultiplanProfile(ctx, userId);
+  },
+});
 
-    const now = Date.now();
-    return await ctx.db.insert("sheet_profiles", {
-      userId,
-      profileId: "multiplan_regional_sul",
-      name: "Multiplan Regional Sul",
-      description:
-        "Perfil para planilhas PKB, BSS e PCN — abas matriciais e Influs.",
-      isDefault: true,
-      config: {
-        shoppingFromFileRegex: "(PKB|BSS|PCN)",
-        platformAliases: { ig: "Instagram", insta: "Instagram", fb: "Facebook" },
-        sheetRules: [
-          { sheetPattern: "onde buscar", domain: "unknown", layout: "metadata", skip: true },
-          { sheetPattern: "Redes Sociais", domain: "social_media", layout: "matrix_metrics" },
-          { sheetPattern: "Analytics", domain: "analytics", layout: "matrix_metrics" },
-          { sheetPattern: "Multi", domain: "multi_app", layout: "matrix_metrics" },
-          { sheetPattern: "Shopping", domain: "shopping", layout: "matrix_metrics" },
-          { sheetPattern: "Influs", domain: "influencers", layout: "table_records" },
-          { sheetPattern: "Fornecedores", domain: "vendors", layout: "matrix_metrics" },
-          { sheetPattern: "Barracadabra", domain: "venue", layout: "matrix_metrics" },
-          { sheetPattern: "Parque do Park", domain: "venue", layout: "matrix_metrics" },
-        ],
-      },
-      createdAt: now,
-      updatedAt: now,
-    });
+export const ensureDefaultInternal = internalMutation({
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    return await ensureDefaultMultiplanProfile(ctx, args.userId);
   },
 });

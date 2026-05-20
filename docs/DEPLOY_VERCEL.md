@@ -71,7 +71,17 @@ vercel --prod
 4. Adicione as variáveis `VITE_CONVEX_*`.
 5. Deploy.
 
-## 5. Após o deploy
+## 5. Upload de planilhas na Vercel
+
+O upload vai **direto para o Convex Storage** (não passa pela Vercel). Se falhar:
+
+1. Confirme `VITE_CONVEX_URL` = deployment **prod** (`tidy-wolverine-260`, não `vibrant-roadrunner-258`).
+2. Após alterar variáveis → **Redeploy** (o Vite embute a URL no build).
+3. Rode `npx convex deploy` para publicar `processUpload` (action Node).
+4. Faça login com usuário criado no deployment **prod** (dados de dev não aparecem em prod).
+5. Convex Dashboard → prod → **Logs** → filtre erros em `uploads:create` ou `processing:processUpload`.
+
+## 6. Após o deploy
 
 1. Copie a URL da Vercel (ex. `https://datainsight.vercel.app`).
 2. Atualize `SITE_URL` no Convex **prod** com essa URL exata.

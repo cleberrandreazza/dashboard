@@ -10,6 +10,7 @@ import { ProfilesPage } from "@/pages/ProfilesPage";
 import { LookerExportPage } from "@/pages/LookerExportPage";
 import { UsersPage } from "@/pages/UsersPage";
 import { SessionGuard } from "@/components/auth/SessionGuard";
+import { EnvConfigBanner } from "@/components/layout/EnvConfigBanner";
 
 function AppRoutes() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
   return (
     <ConvexClientProvider>
       <BrowserRouter>
+        <EnvConfigBanner />
         <AuthLoading>
           <div className="flex min-h-screen items-center justify-center">
             <p className="text-muted-foreground">Carregando...</p>

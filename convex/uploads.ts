@@ -43,6 +43,12 @@ export const create = mutation({
     const isMultiplan = /(PKB|BSS|PCN)/i.test(args.fileName);
     const parserType = args.parserType ?? (isMultiplan ? "multiplan" : "generic");
 
+    if (parserType === "multiplan") {
+      await ctx.runMutation(internal.sheetProfiles.ensureDefaultInternal, {
+        userId,
+      });
+    }
+
     const uploadId = await ctx.db.insert("uploads", {
       userId,
       fileName: args.fileName,

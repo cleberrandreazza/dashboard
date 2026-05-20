@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { uploadFileToConvexStorage } from "@/lib/upload-to-convex";
 
 interface QueuedFile {
   id: string;
@@ -56,35 +57,44 @@ export function FileUploader() {
       );
 
       try {
-        const buffer = await item.file.arrayBuffer();
-        let preview: QueuedFile["preview"];
-
-        if (parserType === "multiplan") {
-          const result = parseMultiplanWorkbook(
-            buffer,
-            item.file.name,
-            MULTIPLAN_DEFAULT_PROFILE
-          );
-          const domains: Record<string, number> = {};
-          for (const rec of result.records) {
-            domains[rec.domain] = (domains[rec.domain] ?? 0) + 1;
+        let preview: QueuedFile["preview"] | undefined;
+        try {
+          const buffer = await item.file.arrayBuffer();
+          if (parserType === "multiplan") {
+            const result = parseMultiplanWorkbook(
+              buffer,
+              item.file.name,
+              MULTIPLAN_DEFAULT_PROFILE
+            );
+            const domains: Record<string, number> = {};
+            for (const rec of result.records) {
+              domains[rec.domain] = (domains[rec.domain] ?? 0) + 1;
+            }
+            preview = {
+              shopping: result.shopping,
+              sheets: result.sheetsProcessed,
+              totalRows: result.records.length,
+              domains,
+              warnings: result.warnings,
+            };
+          } else {
+            const shopping =
+              extractShoppingFromFileName(item.file.name) ?? "—";
+            preview = {
+              shopping,
+              sheets: ["detecção automática"],
+              totalRows: 0,
+              domains: {},
+              warnings: [],
+            };
           }
+        } catch {
           preview = {
-            shopping: result.shopping,
-            sheets: result.sheetsProcessed,
-            totalRows: result.records.length,
-            domains,
-            warnings: result.warnings,
-          };
-        } else {
-          const shopping =
-            extractShoppingFromFileName(item.file.name) ?? "—";
-          preview = {
-            shopping,
-            sheets: ["detecção automática"],
+            shopping: extractShoppingFromFileName(item.file.name) ?? "—",
+            sheets: [],
             totalRows: 0,
             domains: {},
-            warnings: [],
+            warnings: ["Preview local indisponível; envio continua no servidor."],
           };
         }
 
@@ -95,12 +105,13 @@ export function FileUploader() {
         );
 
         const uploadUrl = await generateUrl();
-        const result = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": item.file.type },
-          body: item.file,
-        });
-        const { storageId } = (await result.json()) as { storageId: string };
+        setQueue((q) =>
+          q.map((f) =>
+            f.id === item.id ? { ...f, progress: 50 } : f
+          )
+        );
+
+        const storageId = await uploadFileToConvexStorage(uploadUrl, item.file);
 
         setQueue((q) =>
           q.map((f) =>
@@ -108,13 +119,17 @@ export function FileUploader() {
           )
         );
 
+        const mimeType =
+          item.file.type ||
+          (/\.xls$/i.test(item.file.name)
+            ? "application/vnd.ms-excel"
+            : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
         await createUpload({
           fileName: item.file.name,
           fileSize: item.file.size,
-          mimeType:
-            item.file.type ||
-            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          storageId: storageId as never,
+          mimeType,
+          storageId,
           parserType,
           profileId: parserType === "multiplan" ? profileId : undefined,
         });
