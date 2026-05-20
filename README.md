@@ -11,7 +11,7 @@ Plataforma SaaS para upload de planilhas Excel operacionais (PKB, BSS, PCN), nor
 - **Excel:** SheetJS + parser Multiplan (matricial + tabular)
 - **Apresentações:** pptxgenjs, pdf-lib
 
-## Início rápido
+## Início rápido (local)
 
 ```bash
 npm install
@@ -20,6 +20,14 @@ npm run dev             # terminal 2 → http://localhost:5173
 ```
 
 Auth: `npx @convex-dev/auth --web-server-url http://localhost:5173`
+
+## Deploy na Vercel
+
+1. `npx convex deploy` (backend produção)
+2. Variáveis `VITE_CONVEX_URL` e `VITE_CONVEX_SITE_URL` na Vercel
+3. `vercel --prod` ou importar repositório na Vercel
+
+Guia completo: [docs/DEPLOY_VERCEL.md](docs/DEPLOY_VERCEL.md)
 
 ## Fluxo operacional (prompt original)
 
