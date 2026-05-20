@@ -1,48 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { logAudit } from "./lib/audit";
-
-const snapshotValidator = v.object({
-  kpis: v.array(
-    v.object({
-      key: v.string(),
-      label: v.string(),
-      value: v.number(),
-      format: v.union(
-        v.literal("number"),
-        v.literal("currency"),
-        v.literal("percent")
-      ),
-      changePercent: v.optional(v.number()),
-    })
-  ),
-  timeSeries: v.array(v.object({ label: v.string(), value: v.number() })),
-  byCategory: v.array(v.object({ label: v.string(), value: v.number() })),
-  byRegion: v.array(v.object({ label: v.string(), value: v.number() })),
-  insights: v.array(
-    v.object({
-      id: v.string(),
-      type: v.union(
-        v.literal("summary"),
-        v.literal("trend"),
-        v.literal("alert"),
-        v.literal("anomaly"),
-        v.literal("growth"),
-        v.literal("comparison")
-      ),
-      severity: v.union(
-        v.literal("info"),
-        v.literal("warning"),
-        v.literal("critical")
-      ),
-      title: v.string(),
-      description: v.string(),
-      metric: v.optional(v.string()),
-      value: v.optional(v.number()),
-      changePercent: v.optional(v.number()),
-    })
-  ),
-});
+import { dashboardSnapshotValidator } from "./lib/snapshotValidator";
 
 export const getUploadInternal = internalQuery({
   args: { uploadId: v.id("uploads") },
@@ -128,7 +87,7 @@ export const persistProcessing = internalMutation({
         ),
       })
     ),
-    snapshot: snapshotValidator,
+    snapshot: dashboardSnapshotValidator,
   },
   handler: async (ctx, args) => {
     const now = Date.now();

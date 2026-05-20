@@ -14,6 +14,8 @@ import type * as http from "../http.js";
 import type * as lib_audit from "../lib/audit.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_records from "../lib/records.js";
+import type * as lib_sheetProfileSeed from "../lib/sheetProfileSeed.js";
+import type * as lib_snapshotValidator from "../lib/snapshotValidator.js";
 import type * as lookerExport from "../lookerExport.js";
 import type * as lookerExportAction from "../lookerExportAction.js";
 import type * as lookerExportInternal from "../lookerExportInternal.js";
@@ -40,6 +42,8 @@ declare const fullApi: ApiFromModules<{
   "lib/audit": typeof lib_audit;
   "lib/auth": typeof lib_auth;
   "lib/records": typeof lib_records;
+  "lib/sheetProfileSeed": typeof lib_sheetProfileSeed;
+  "lib/snapshotValidator": typeof lib_snapshotValidator;
   lookerExport: typeof lookerExport;
   lookerExportAction: typeof lookerExportAction;
   lookerExportInternal: typeof lookerExportInternal;

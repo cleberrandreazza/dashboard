@@ -1,6 +1,7 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
+import { dashboardSnapshotValidator } from "./lib/snapshotValidator";
 
 const uploadStatus = v.union(
   v.literal("pending"),
@@ -11,15 +12,6 @@ const uploadStatus = v.union(
 );
 
 const presentationFormat = v.union(v.literal("pptx"), v.literal("pdf"));
-
-const insightType = v.union(
-  v.literal("summary"),
-  v.literal("trend"),
-  v.literal("alert"),
-  v.literal("anomaly"),
-  v.literal("growth"),
-  v.literal("comparison")
-);
 
 const columnMappingValidator = v.object({
   sourceColumn: v.string(),
@@ -142,40 +134,7 @@ export default defineSchema({
       v.literal("comparative"),
       v.literal("temporal")
     ),
-    snapshot: v.object({
-      kpis: v.array(
-        v.object({
-          key: v.string(),
-          label: v.string(),
-          value: v.number(),
-          format: v.union(
-            v.literal("number"),
-            v.literal("currency"),
-            v.literal("percent")
-          ),
-          changePercent: v.optional(v.number()),
-        })
-      ),
-      timeSeries: v.array(v.object({ label: v.string(), value: v.number() })),
-      byCategory: v.array(v.object({ label: v.string(), value: v.number() })),
-      byRegion: v.array(v.object({ label: v.string(), value: v.number() })),
-      insights: v.array(
-        v.object({
-          id: v.string(),
-          type: insightType,
-          severity: v.union(
-            v.literal("info"),
-            v.literal("warning"),
-            v.literal("critical")
-          ),
-          title: v.string(),
-          description: v.string(),
-          metric: v.optional(v.string()),
-          value: v.optional(v.number()),
-          changePercent: v.optional(v.number()),
-        })
-      ),
-    }),
+    snapshot: dashboardSnapshotValidator,
     filters: v.optional(v.record(v.string(), v.string())),
     createdAt: v.number(),
     updatedAt: v.number(),
